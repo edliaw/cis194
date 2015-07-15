@@ -29,40 +29,42 @@ instance Show a => Show (Stream a) where
              ++ ",..."
 
 streamToList :: Stream a -> [a]
-streamToList = undefined
+streamToList (Cons x xs) = x:(streamToList xs)
 
 -- Exercise 4 -----------------------------------------
 
 instance Functor Stream where
-    fmap = undefined
+    fmap f (Cons x xs) = Cons (f x) (fmap f xs)
 
 -- Exercise 5 -----------------------------------------
 
 sRepeat :: a -> Stream a
-sRepeat = undefined
+sRepeat x = Cons x (sRepeat x)
 
 sIterate :: (a -> a) -> a -> Stream a
-sIterate = undefined
+sIterate f x = Cons x (sIterate f (f x))
 
 sInterleave :: Stream a -> Stream a -> Stream a
-sInterleave (Cons _ _) _ = undefined
+sInterleave (Cons x xs) y = Cons x (sInterleave y xs)
 
 sTake :: Int -> Stream a -> [a]
-sTake = undefined
+sTake 0 _ = []
+sTake i (Cons x xs) = x:(sTake (i-1) xs)
 
 -- Exercise 6 -----------------------------------------
 
 nats :: Stream Integer
-nats = undefined
+nats = sIterate (+ 1) 0
 
 ruler :: Stream Integer
-ruler = undefined
+ruler = next nats where
+    next (Cons x xs) = sInterleave (sRepeat x) (next xs)
 
 -- Exercise 7 -----------------------------------------
 
 -- | Implementation of C rand
 rand :: Int -> Stream Int
-rand = undefined
+rand = sIterate (\r -> (1103515245 * r + 12345) `mod` 2147483648)
 
 -- Exercise 8 -----------------------------------------
 
@@ -75,12 +77,42 @@ minMaxSlow xs = Just (minimum xs, maximum xs)
 
 {- Total Memory in use: ??? MB -}
 minMax :: [Int] -> Maybe (Int, Int)
-minMax = undefined
+minMax [] = Nothing
+minMax (x:xs) = mmax x x xs
+mmax :: Int -> Int -> [Int] -> Maybe (Int, Int)
+mmax mn mx [] = Just (mn, mx)
+mmax mn mx (x:xs) = mn' `seq` mx' `seq` mmax mn' mx' xs
+  where
+    mx' = max mx x
+    mn' = min mn x
 
 main :: IO ()
-main = print $ minMaxSlow $ sTake 1000000 $ rand 7666532
+main = print $ minMax $ sTake 1000000 $ rand 7666532
 
 -- Exercise 10 ----------------------------------------
 
+data Matrix2x2 = Matrix { m11 :: Integer, m12 :: Integer, m21 :: Integer, m22 :: Integer }
+
+toList :: Matrix2x2 -> [[Integer]]
+toList m = [[m11 m, m12 m], [m21 m, m22 m]]
+
+toTuple :: Matrix2x2 -> ((Integer, Integer), (Integer, Integer))
+toTuple m = ((m11 m, m12 m), (m21 m, m22 m))
+
+instance Show Matrix2x2 where
+    show = show . toTuple
+
+instance Num Matrix2x2 where
+    (+) = undefined
+    a * b = Matrix m11' m12' m21' m22' where
+      m11' = m11 a * m11 b + m12 a * m21 b
+      m12' = m11 a * m12 b + m12 a * m22 b
+      m21' = m21 a * m11 b + m22 a * m21 b
+      m22' = m21 a * m12 b + m22 a * m22 b
+    negate (Matrix a b c d) = Matrix (negate a) (negate b) (negate c) (negate d)
+    fromInteger n = Matrix n 0 0 n
+    abs = undefined
+    signum = undefined
+
 fastFib :: Int -> Integer
-fastFib = undefined
+fastFib n = m11 ((Matrix 1 1 1 0) ^ n)
