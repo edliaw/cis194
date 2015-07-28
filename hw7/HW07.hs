@@ -79,7 +79,7 @@ partitionAt vx i = (lt, x, ge)
           x = vx ! i
           (before, after') = V.splitAt i vx
           after = V.tail after'
-          (lt, ge) = V.unstablePartition (< x) (before V.++ after)
+          (lt, ge) = V.unstablePartition (< x) (before <> after)
 
 -- Exercise 7 -----------------------------------------
 
@@ -101,12 +101,14 @@ qsort vx
 -- Exercise 8 -----------------------------------------
 
 qsortR :: Ord a => Vector a -> Rnd (Vector a)
-qsortR vx = do
-    r <- getRandomR (0, V.length vx - 1)
-    let (lt, p, gt) = partitionAt vx r
-    lt' <- qsortR lt
-    gt' <- qsortR gt
-    return $ lt' <> V.singleton p <> gt'
+qsortR vx 
+    | V.null vx = return vx
+    | otherwise = do
+        r <- getRandomR (0, V.length vx - 1)
+        let (lt, p, gt) = partitionAt vx r
+        lt' <- qsortR lt
+        gt' <- qsortR gt
+        return $  lt' <> V.singleton p <> gt'
 
 -- Exercise 9 -----------------------------------------
 
