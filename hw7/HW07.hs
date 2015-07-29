@@ -76,10 +76,8 @@ pop vx i = (V.head rest, before <> (V.tail rest))
 partitionAt :: Ord a => Vector a -> Int -> (Vector a, a, Vector a)
 partitionAt vx i = (lt, x, ge)
     where 
-          x = vx ! i
-          (before, after') = V.splitAt i vx
-          after = V.tail after'
-          (lt, ge) = V.unstablePartition (< x) (before <> after)
+          (x, rest) = pop vx i
+          (lt, ge) = V.unstablePartition (< x) rest
 
 -- Exercise 7 -----------------------------------------
 
@@ -102,37 +100,53 @@ qsort vx
 
 qsortR :: Ord a => Vector a -> Rnd (Vector a)
 qsortR vx 
-    | V.null vx = return vx
-    | otherwise = do
-        r <- getRandomR (0, V.length vx - 1)
-        let (lt, p, gt) = partitionAt vx r
-        lt' <- qsortR lt
-        gt' <- qsortR gt
-        return $  lt' <> V.singleton p <> gt'
+  | V.null vx = return vx
+  | otherwise = do
+      r <- getRandomR (0, V.length vx - 1)
+      let (lt, p, gt) = partitionAt vx r
+      lt' <- qsortR lt
+      gt' <- qsortR gt
+      return $ lt' <> V.singleton p <> gt'
 
 -- Exercise 9 -----------------------------------------
 
 -- Selection
 select :: Ord a => Int -> Vector a -> Rnd (Maybe a)
-select = undefined
+select i vx
+  | V.null vx = return Nothing
+  | otherwise = do
+      r <- getRandomR (0, V.length vx - 1)
+      let (lt, p, gt) = partitionAt vx r
+      case compare i (V.length lt) of
+        LT -> select i lt
+        EQ -> return $ Just p
+        GT -> select (i - (V.length lt) - 1) gt
 
 -- Exercise 10 ----------------------------------------
 
 allCards :: Deck
-allCards = undefined
+allCards = [ Card l s | s <- suits, l <- labels ]
 
 newDeck :: Rnd Deck
-newDeck =  undefined
+newDeck = shuffle allCards
 
 -- Exercise 11 ----------------------------------------
 
 nextCard :: Deck -> Maybe (Card, Deck)
-nextCard = undefined
+nextCard d
+  | V.null d = Nothing
+  | otherwise = return (V.head d, V.tail d)
 
 -- Exercise 12 ----------------------------------------
 
 getCards :: Int -> Deck -> Maybe ([Card], Deck)
-getCards = undefined
+getCards 0 d = return ([], d)
+getCards n d
+  | V.null d = Nothing
+  | otherwise = do
+      (c, d') <- nextCard d
+      (cs, d'') <- getCards (n-1) d'
+      return (c:cs, d'')
 
 -- Exercise 13 ----------------------------------------
 
