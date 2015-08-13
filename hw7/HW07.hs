@@ -75,7 +75,7 @@ pop vx i = (V.head rest, before <> (V.tail rest))
 
 partitionAt :: Ord a => Vector a -> Int -> (Vector a, a, Vector a)
 partitionAt vx i = (lt, x, ge)
-    where 
+    where
           (x, rest) = pop vx i
           (lt, ge) = V.unstablePartition (< x) rest
 
@@ -99,7 +99,7 @@ qsort vx
 -- Exercise 8 -----------------------------------------
 
 qsortR :: Ord a => Vector a -> Rnd (Vector a)
-qsortR vx 
+qsortR vx
   | V.null vx = return vx
   | otherwise = do
       r <- getRandomR (0, V.length vx - 1)
@@ -190,7 +190,7 @@ repl s@State{..} | money <= 0  = putStrLn "You ran out of money!"
                   _ | c13 > c23 -> repl $ State (m + amt) d'
                     | c13 < c23 -> repl $ State (m - amt) d'
                     | otherwise -> war (State m d') amt
-              _ -> deckEmpty 
+              _ -> deckEmpty
 
 main :: IO ()
 main = evalRandIO newDeck >>= repl . State 100
